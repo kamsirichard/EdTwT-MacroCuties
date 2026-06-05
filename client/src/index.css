@@ -1,0 +1,164 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 60% 98%;
+    --foreground: 340 15% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 340 15% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 340 15% 20%;
+    --primary: 340 80% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 280 60% 90%;
+    --secondary-foreground: 280 40% 35%;
+    --muted: 30 40% 95%;
+    --muted-foreground: 340 10% 55%;
+    --accent: 165 50% 85%;
+    --accent-foreground: 165 40% 25%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 340 20% 90%;
+    --input: 340 20% 90%;
+    --ring: 340 80% 65%;
+    --radius: 1rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: "Nunito", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(30 40% 95%);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(340 60% 80%);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(340 70% 70%);
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-hero {
+    background: linear-gradient(
+      135deg,
+      hsl(340 80% 97%) 0%,
+      hsl(280 60% 97%) 35%,
+      hsl(165 50% 95%) 65%,
+      hsl(45 90% 97%) 100%
+    );
+  }
+
+  .gradient-card {
+    background: linear-gradient(
+      135deg,
+      hsl(0 0% 100%) 0%,
+      hsl(340 60% 99%) 100%
+    );
+  }
+
+  .gradient-pink {
+    background: linear-gradient(135deg, hsl(340 80% 65%) 0%, hsl(280 60% 65%) 100%);
+  }
+
+  .gradient-mint {
+    background: linear-gradient(135deg, hsl(165 50% 60%) 0%, hsl(200 60% 65%) 100%);
+  }
+
+  .gradient-peach {
+    background: linear-gradient(135deg, hsl(25 90% 70%) 0%, hsl(45 95% 65%) 100%);
+  }
+
+  /* Cute floating animation */
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .float-slow {
+    animation: float-slow 4s ease-in-out infinite;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px hsla(340, 60%, 50%, 0.15);
+  }
+
+  /* Cute badge */
+  .badge-cute {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(30 40% 95%) 25%,
+      hsl(340 60% 97%) 50%,
+      hsl(30 40% 95%) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(-2deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
