@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createSchema } from "./db/schema";
 import { seedData } from "./db/seed";
+import { seedLocations } from "./db/seed-locations";
 import restaurantRoutes from "./routes/restaurants";
 import menuItemRoutes from "./routes/menuItems";
 import condimentRoutes from "./routes/condiments";
@@ -35,6 +36,7 @@ async function start() {
   try {
     await createSchema();
     await seedData();
+    await seedLocations();
     app.listen(PORT, () => {
       console.log(`MacroCutie API running on port ${PORT}`);
     });

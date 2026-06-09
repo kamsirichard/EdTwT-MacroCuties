@@ -13,6 +13,20 @@ export interface Restaurant {
   website: string;
   dietary_options: string[];
   is_featured: boolean;
+  locations?: RestaurantLocation[];
+}
+
+export interface RestaurantLocation {
+  city: string;
+  province_state: string;
+  country: string;
+  neighborhood: string;
+}
+
+export interface LocationData {
+  canada: Array<{ city: string; province_state: string; country: string; chain_count: string }>;
+  usa: Array<{ city: string; province_state: string; country: string; chain_count: string }>;
+  toronto_neighborhoods: string[];
 }
 
 export interface MenuItem {
@@ -143,12 +157,24 @@ export const api = {
     list: (params?: Record<string, string>) => get<Restaurant[]>("/restaurants", params),
     get: (slug: string) => get<Restaurant>(`/restaurants/${slug}`),
     categories: () => get<string[]>("/restaurants/categories"),
-    stats: () => get<{ total_restaurants: string; total_items: string; total_condiments: string; total_categories: string }>("/restaurants/stats"),
+    locations: () => get<LocationData>("/restaurants/locations"),
+    stats: () =>
+      get<{
+        total_restaurants: string;
+        total_items: string;
+        total_condiments: string;
+        total_categories: string;
+        total_cities: string;
+      }>("/restaurants/stats"),
   },
   menuItems: {
     list: (params?: Record<string, string>) => get<MenuItem[]>("/menu-items", params),
     get: (id: number) => get<MenuItem>(`/menu-items/${id}`),
-    categories: (restaurantSlug?: string) => get<string[]>("/menu-items/categories", restaurantSlug ? { restaurant_slug: restaurantSlug } : undefined),
+    categories: (restaurantSlug?: string) =>
+      get<string[]>(
+        "/menu-items/categories",
+        restaurantSlug ? { restaurant_slug: restaurantSlug } : undefined
+      ),
   },
   condiments: {
     list: (params?: Record<string, string>) => get<Condiment[]>("/condiments", params),

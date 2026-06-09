@@ -96,9 +96,22 @@ export async function createSchema() {
       category VARCHAR(100)
     );
 
+    CREATE TABLE IF NOT EXISTS restaurant_locations (
+      id SERIAL PRIMARY KEY,
+      restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE,
+      city VARCHAR(150) NOT NULL,
+      province_state VARCHAR(100) NOT NULL,
+      country VARCHAR(100) NOT NULL DEFAULT 'Canada',
+      neighborhood VARCHAR(200) DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(restaurant_id, city, province_state, country, neighborhood)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant ON menu_items(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category);
     CREATE INDEX IF NOT EXISTS idx_condiments_category ON condiments(category);
     CREATE INDEX IF NOT EXISTS idx_restaurants_slug ON restaurants(slug);
+    CREATE INDEX IF NOT EXISTS idx_locations_city ON restaurant_locations(city);
+    CREATE INDEX IF NOT EXISTS idx_locations_restaurant ON restaurant_locations(restaurant_id);
   `);
 }

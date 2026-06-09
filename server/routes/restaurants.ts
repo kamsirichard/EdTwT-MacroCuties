@@ -5,37 +5,92 @@ const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const { search, category, dietary, featured } = req.query;
-    let query = `SELECT * FROM restaurants WHERE 1=1`;
+    const { search, category, dietary, featured, city, neighborhood } = req.query;
+
     const params: unknown[] = [];
     let idx = 1;
+    let joinClause = "";
+    let whereClause = "WHERE 1=1";
+
+    if (city) {
+      joinClause = `JOIN restaurant_locations rl ON r.id = rl.restaurant_id`;
+      whereClause += ` AND LOWER(rl.city) = LOWER($${idx})`;
+      params.push(String(city));
+      idx++;
+
+      if (neighborhood) {
+        whereClause += ` AND LOWER(rl.neighborhood) = LOWER($${idx})`;
+        params.push(String(neighborhood));
+        idx++;
+      }
+    }
 
     if (search) {
-      query += ` AND (LOWER(name) LIKE $${idx} OR LOWER(category) LIKE $${idx})`;
+      whereClause += ` AND (LOWER(r.name) LIKE $${idx} OR LOWER(r.category) LIKE $${idx})`;
       params.push(`%${String(search).toLowerCase()}%`);
       idx++;
     }
     if (category) {
-      query += ` AND category = $${idx}`;
+      whereClause += ` AND r.category = $${idx}`;
       params.push(String(category));
       idx++;
     }
     if (dietary) {
-      query += ` AND $${idx} = ANY(dietary_options)`;
+      whereClause += ` AND $${idx} = ANY(r.dietary_options)`;
       params.push(String(dietary));
       idx++;
     }
     if (featured === "true") {
-      query += ` AND is_featured = true`;
+      whereClause += ` AND r.is_featured = true`;
     }
 
-    query += ` ORDER BY is_featured DESC, name ASC`;
+    const query = `
+      SELECT DISTINCT r.*
+      FROM restaurants r
+      ${joinClause}
+      ${whereClause}
+      ORDER BY r.is_featured DESC, r.name ASC
+    `;
 
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch restaurants" });
+  }
+});
+
+router.get("/locations", async (_req: Request, res: Response) => {
+  try {
+    const citiesRes = await pool.query(`
+      SELECT
+        rl.city,
+        rl.province_state,
+        rl.country,
+        COUNT(DISTINCT rl.restaurant_id) AS chain_count
+      FROM restaurant_locations rl
+      GROUP BY rl.city, rl.province_state, rl.country
+      ORDER BY rl.country ASC, chain_count DESC, rl.city ASC
+    `);
+
+    const hoodRes = await pool.query(`
+      SELECT DISTINCT neighborhood
+      FROM restaurant_locations
+      WHERE city = 'Toronto' AND neighborhood != ''
+      ORDER BY neighborhood ASC
+    `);
+
+    const canada = citiesRes.rows.filter((r) => r.country === "Canada");
+    const usa = citiesRes.rows.filter((r) => r.country === "USA");
+
+    res.json({
+      canada,
+      usa,
+      toronto_neighborhoods: hoodRes.rows.map((r) => r.neighborhood),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch locations" });
   }
 });
 
@@ -53,11 +108,12 @@ router.get("/categories", async (_req: Request, res: Response) => {
 router.get("/stats", async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         (SELECT COUNT(*) FROM restaurants) AS total_restaurants,
         (SELECT COUNT(*) FROM menu_items) AS total_items,
         (SELECT COUNT(*) FROM condiments) AS total_condiments,
-        (SELECT COUNT(DISTINCT category) FROM restaurants) AS total_categories
+        (SELECT COUNT(DISTINCT category) FROM restaurants) AS total_categories,
+        (SELECT COUNT(DISTINCT city) FROM restaurant_locations) AS total_cities
     `);
     res.json(result.rows[0]);
   } catch (err) {
@@ -74,7 +130,19 @@ router.get("/:slug", async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Restaurant not found" });
     }
-    res.json(result.rows[0]);
+
+    const restaurant = result.rows[0];
+
+    const locsRes = await pool.query(
+      `SELECT city, province_state, country, neighborhood
+       FROM restaurant_locations
+       WHERE restaurant_id = $1
+       ORDER BY country ASC, city ASC, neighborhood ASC`,
+      [restaurant.id]
+    );
+    restaurant.locations = locsRes.rows;
+
+    res.json(restaurant);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch restaurant" });
   }
