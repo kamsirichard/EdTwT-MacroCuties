@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { ShoppingCart, Sparkles } from "lucide-react";
+import { ShoppingCart, BookOpen } from "lucide-react";
 import { cn, formatCalories } from "@/lib/utils";
 
 interface NavbarProps {
@@ -27,11 +27,20 @@ export function Navbar({ itemCount, totalCalories }: NavbarProps) {
           </div>
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground font-500">
-            <Sparkles size={12} className="text-primary" />
-            <span>Track every bite</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLocation("/about")}
+            className={cn(
+              "hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-600 transition-all",
+              location === "/about"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <BookOpen size={15} />
+            <span>About & Data</span>
+          </button>
+
           <button
             data-testid="button-meal-cart"
             onClick={() => setLocation("/meal")}

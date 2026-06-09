@@ -13,6 +13,7 @@ export interface Restaurant {
   website: string;
   dietary_options: string[];
   is_featured: boolean;
+  available_locally?: boolean;
   locations?: RestaurantLocation[];
 }
 

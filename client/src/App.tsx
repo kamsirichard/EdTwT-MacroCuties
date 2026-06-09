@@ -4,6 +4,7 @@ import Home from "@/pages/Home";
 import RestaurantPage from "@/pages/Restaurant";
 import MealBuilder from "@/pages/MealBuilder";
 import NutritionSummary from "@/pages/NutritionSummary";
+import About from "@/pages/About";
 import { useMeal } from "@/hooks/useMeal";
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
       <Navbar itemCount={meal.itemCount} totalCalories={meal.getTotalCalories()} />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/about" component={About} />
         <Route path="/restaurant/:slug">
           {(params) => (
             <RestaurantPage

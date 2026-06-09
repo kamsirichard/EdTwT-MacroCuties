@@ -104,7 +104,7 @@ export async function seedLocations() {
     const existing = await client.query("SELECT COUNT(*) FROM restaurant_locations");
     if (parseInt(existing.rows[0].count) > 0) {
       console.log("Locations already seeded, skipping...");
-      client.release();
+      await client.query("ROLLBACK");
       return;
     }
 

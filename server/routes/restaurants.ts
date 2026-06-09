@@ -9,17 +9,29 @@ router.get("/", async (req: Request, res: Response) => {
 
     const params: unknown[] = [];
     let idx = 1;
-    let joinClause = "";
+    let localJoin = "";
+    let localSelect = "false AS available_locally";
     let whereClause = "WHERE 1=1";
 
     if (city) {
-      joinClause = `JOIN restaurant_locations rl ON r.id = rl.restaurant_id`;
-      whereClause += ` AND LOWER(rl.city) = LOWER($${idx})`;
+      const hoodFilter =
+        neighborhood
+          ? `AND LOWER(rl.neighborhood) = LOWER($${idx + 1})`
+          : "";
+
+      localJoin = `
+        LEFT JOIN (
+          SELECT DISTINCT restaurant_id
+          FROM restaurant_locations
+          WHERE LOWER(city) = LOWER($${idx})
+          ${hoodFilter}
+        ) loc ON r.id = loc.restaurant_id
+      `;
+      localSelect = "CASE WHEN loc.restaurant_id IS NOT NULL THEN true ELSE false END AS available_locally";
+
       params.push(String(city));
       idx++;
-
       if (neighborhood) {
-        whereClause += ` AND LOWER(rl.neighborhood) = LOWER($${idx})`;
         params.push(String(neighborhood));
         idx++;
       }
@@ -44,12 +56,16 @@ router.get("/", async (req: Request, res: Response) => {
       whereClause += ` AND r.is_featured = true`;
     }
 
+    const orderClause = city
+      ? `ORDER BY available_locally DESC, r.is_featured DESC, r.name ASC`
+      : `ORDER BY r.is_featured DESC, r.name ASC`;
+
     const query = `
-      SELECT DISTINCT r.*
+      SELECT r.*, ${localSelect}
       FROM restaurants r
-      ${joinClause}
+      ${localJoin}
       ${whereClause}
-      ORDER BY r.is_featured DESC, r.name ASC
+      ${orderClause}
     `;
 
     const result = await pool.query(query, params);
@@ -130,9 +146,7 @@ router.get("/:slug", async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Restaurant not found" });
     }
-
     const restaurant = result.rows[0];
-
     const locsRes = await pool.query(
       `SELECT city, province_state, country, neighborhood
        FROM restaurant_locations
@@ -141,7 +155,6 @@ router.get("/:slug", async (req: Request, res: Response) => {
       [restaurant.id]
     );
     restaurant.locations = locsRes.rows;
-
     res.json(restaurant);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch restaurant" });
