@@ -3,9 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# Build output
-dist/
-build/
+# Build output — keep dist/public (pre-built frontend for deployment)
 client/dist/
 
 # Environment variables
