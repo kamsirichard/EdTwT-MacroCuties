@@ -1,0 +1,534 @@
+Skip to content
+kamsirichard
+EdTwT-MacroCuties
+Repository navigation
+Code
+Issues
+Pull requests
+Actions
+Projects
+Security and quality
+Insights
+Settings
+Commit 6cbe781
+replit-agent
+replit-agent
+committed
+3 days ago
+Add Vercel deployment configuration for free hosting
+Integrate Vercel deployment by adding `vercel.json`, `api/index.ts` for serverless functions, updating `package.json` build scripts, and adjusting client-side API paths.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: 1dffda90-ee0b-475d-bbfc-1b66174d645a
+Replit-Commit-Checkpoint-Type: full_checkpoint
+Replit-Commit-Event-Id: 6483fd1b-ac80-4fc9-8590-d28554900dba
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/764ed538-a028-4abd-97af-28a0cdcb6e90/1dffda90-ee0b-475d-bbfc-1b66174d645a/ucE3tFo
+Replit-Helium-Checkpoint-Created: true
+main
+1 parent 
+a67f9a0
+ commit 
+6cbe781
+7 files changed
+
++304
+-152
+Lines changed: 304 additions & 152 deletions
+File tree
+Filter files…
+.gitignore
+api
+index.ts
+client/src/lib
+api.ts
+utils.ts
+package.json
+tsconfig.server.json
+vercel.json
+Search within code
+ 
+Customizable line height
+The default line height has been increased for improved accessibility. You can choose to enable a more compact line height from the view settings menu.
+
+‎.gitignore‎
++55
+-151
+Lines changed: 55 additions & 151 deletions
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -1,160 +1,64 @@
+# Byte-compiled / optimized / DLL files
+# Dependencies
+__pycache__/
+node_modules/
+*.py[cod]
+.pnp
+*$py.class
+.pnp.js
+
+
+# C extensions
+# Build output
+*.so
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+dist/
+downloads/
+build/
+eggs/
+client/dist/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+# Translations
+*.mo
+*.pot
+
+
+# Django stuff:
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+# Flask stuff:
+instance/
+.webassets-cache
+# Scrapy stuff:
+.scrapy
+# Sphinx documentation
+docs/_build/
+# PyBuilder
+.pybuilder/
+target/
+# Jupyter Notebook
+.ipynb_checkpoints
+# IPython
+profile_default/
+ipython_config.py
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+
+# pipenv
+# Runtime data
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+pids
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+*.pid
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+*.seed
+#   install all needed dependencies.
+*.pid.lock
+#Pipfile.lock
+# Testing
+# poetry
+coverage/
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+.nyc_output
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+# Editor
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+.vscode/
+#poetry.lock
+.idea/
+*.swp
+# pdm
+*.swo
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+.DS_Store
+#pdm.lock
+Thumbs.db
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+# Replit
+#   https://pdm.fming.dev/#use-with-ide
+.replit
+.pdm.toml
+replit.nix
+.local/
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+# Python
+__pycache__/
+# Celery stuff
+*.py[cod]
+celerybeat-schedule
+*.so
+celerybeat.pid
+.Python
+# SageMath parsed files
+*.sage.py
+# Environments
+.env
+.venv
+.venv
+env/
+venv/
+venv/
+ENV/
+env/
+env.bak/
+uv.lock
+venv.bak/
+pyproject.toml
+main.py
+# Spyder project settings
+.spyderproject
+.spyproject
+# Rope project settings
+.ropeproject
+# mkdocs documentation
+/site
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+# Pyre type checker
+.pyre/
+# pytype static type analyzer
+.pytype/
+
+
+# Cython debug symbols
+# TypeScript
+cython_debug/
+*.tsbuildinfo
+
+
+# PyCharm
+# Vercel
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+.vercel
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+‎api/index.ts‎
++29
+Lines changed: 29 additions & 0 deletions
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -0,0 +1,29 @@
+import express from "express";
+import cors from "cors";
+import { createSchema } from "../server/db/schema";
+import { seedData } from "../server/db/seed";
+import restaurantRoutes from "../server/routes/restaurants";
+import menuItemRoutes from "../server/routes/menuItems";
+import condimentRoutes from "../server/routes/condiments";
+import nutritionRoutes from "../server/routes/nutrition";
+const app = express();
+app.use(cors({ origin: "*" }));
+app.use(express.json({ limit: "10mb" }));
+app.use("/api/restaurants", restaurantRoutes);
+app.use("/api/menu-items", menuItemRoutes);
+app.use("/api/condiments", condimentRoutes);
+app.use("/api/nutrition", nutritionRoutes);
+const initPromise = createSchema()
+  .then(() => seedData())
+  .catch((err) => console.error("DB init error:", err));
+const handler = async (req: any, res: any) => {
+  await initPromise;
+  app(req, res);
+};
+export default handler;
+‎client/src/lib/api.ts‎
++165
+Lines changed: 165 additions & 0 deletions
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -0,0 +1,165 @@
+const BASE = "/api";
+export interface Restaurant {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+  headquarters: string;
+  country: string;
+  description: string;
+  logo_emoji: string;
+  logo_color: string;
+  website: string;
+  dietary_options: string[];
+  is_featured: boolean;
+}
+export interface MenuItem {
+  id: number;
+  restaurant_id: number;
+  restaurant_name: string;
+  restaurant_slug: string;
+  logo_emoji: string;
+  logo_color: string;
+  name: string;
+  category: string;
+  description: string;
+  base_calories: number;
+  base_protein_g: number;
+  base_carbs_g: number;
+  base_fat_g: number;
+  base_saturated_fat_g: number;
+  base_sodium_mg: number;
+  base_sugar_g: number;
+  base_fiber_g: number;
+  base_cholesterol_mg: number;
+  serving_size_g: number;
+  is_vegan: boolean;
+  is_vegetarian: boolean;
+  is_halal: boolean;
+  is_gluten_free: boolean;
+  is_dairy_free: boolean;
+  allergens: string[];
+}
+export interface Condiment {
+  id: number;
+  name: string;
+  category: string;
+  brand: string;
+  description: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  saturated_fat_g: number;
+  sodium_mg: number;
+  sugar_g: number;
+  serving_size: string;
+  serving_size_g: number;
+  is_vegan: boolean;
+  is_gluten_free: boolean;
+}
+export interface MealItemCondiment {
+  condimentId: number;
+  name: string;
+  quantity: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  sodium: number;
+  sugar: number;
+}
+export interface MealItemModification {
+  name: string;
+  caloriesDelta: number;
+  proteinDelta: number;
+  carbsDelta: number;
+  fatDelta: number;
+  sodiumDelta: number;
+}
+export interface MealItem {
+  menuItemId: number;
+  name: string;
+  restaurantName: string;
+  quantity: number;
+  baseCalories: number;
+  baseProtein: number;
+  baseCarbs: number;
+  baseFat: number;
+  baseSodium: number;
+  baseSugar: number;
+  baseFiber: number;
+  baseCholesterol: number;
+  condiments: MealItemCondiment[];
+  modifications: MealItemModification[];
+}
+export interface NutritionResult {
+  breakdown: Array<{
+    name: string;
+    restaurantName: string;
+    quantity: number;
+    calories: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+    sodium_mg: number;
+    sugar_g: number;
+    fiber_g: number;
+    macroPercents: { protein: number; carbs: number; fat: number };
+  }>;
+  totals: {
+    calories: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+    sodium_mg: number;
+    sugar_g: number;
+    fiber_g: number;
+    cholesterol_mg: number;
+  };
+  macroPercents: { protein: number; carbs: number; fat: number };
+  dailyGoals: Record<string, { value: number; goal: number; percent: number }>;
+}
+async function get<T>(path: string, params?: Record<string, string>): Promise<T> {
+  const url = new URL(BASE + path, window.location.origin);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v));
+  }
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+export const api = {
+  restaurants: {
+    list: (params?: Record<string, string>) => get<Restaurant[]>("/restaurants", params),
+    get: (slug: string) => get<Restaurant>(`/restaurants/${slug}`),
+    categories: () => get<string[]>("/restaurants/categories"),
+    stats: () => get<{ total_restaurants: string; total_items: string; total_condiments: string; total_categories: string }>("/restaurants/stats"),
+  },
+  menuItems: {
+    list: (params?: Record<string, string>) => get<MenuItem[]>("/menu-items", params),
+    get: (id: number) => get<MenuItem>(`/menu-items/${id}`),
+    categories: (restaurantSlug?: string) => get<string[]>("/menu-items/categories", restaurantSlug ? { restaurant_slug: restaurantSlug } : undefined),
+  },
+  condiments: {
+    list: (params?: Record<string, string>) => get<Condiment[]>("/condiments", params),
+    categories: () => get<string[]>("/condiments/categories"),
+  },
+  nutrition: {
+    calculate: (items: MealItem[]) =>
+      fetch("/api/nutrition/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      }).then((r) => r.json() as Promise<NutritionResult>),
+  },
+};
+‎client/src/lib/utils.ts‎
++32
+Lines changed: 32 additions & 0 deletions
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -0,0 +1,32 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+export function formatCalories(cal: number): string {
+  return Math.round(cal).toLocaleString();
+}
+export function formatMacro(val: number, unit: string = "g"): string {
+  return `${Math.round(val * 10) / 10}${unit}`;
+}
+export function getCalorieColor(calories: number): string {
+  if (calories < 300) return "text-emerald-500";
+  if (calories < 600) return "text-amber-500";
+  if (calories < 900) return "text-orange-500";
+  return "text-rose-500";
+}
+export function getDietaryBadge(type: string): { label: string; color: string; emoji: string } {
+  const badges: Record<string, { label: string; color: string; emoji: string }> = {
+    vegan: { label: "Vegan", color: "bg-emerald-100 text-emerald-700", emoji: "🌱" },
+    vegetarian: { label: "Vegetarian", color: "bg-green-100 text-green-700", emoji: "🥦" },
+    halal: { label: "Halal", color: "bg-teal-100 text-teal-700", emoji: "☪️" },
+    "gluten-free": { label: "Gluten Free", color: "bg-amber-100 text-amber-700", emoji: "🌾" },
+    "dairy-free": { label: "Dairy Free", color: "bg-blue-100 text-blue-700", emoji: "🥛" },
+  };
+  return badges[type] || { label: type, color: "bg-gray-100 text-gray-700", emoji: "✓" };
+}
+‎package.json‎
++2
+-1
+Lines changed: 2 additions & 1 deletion
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -8,7 +8,8 @@
+    "dev:client": "vite",
+    "dev:client": "vite",
+    "build": "vite build",
+    "build": "vite build",
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "db:push": "tsx server/db/migrate.ts"
+    "db:push": "tsx server/db/migrate.ts",
+    "db:seed": "tsx server/db/seed.ts"
+  },
+  },
+  "dependencies": {
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@hookform/resolvers": "^3.10.0",
+‎tsconfig.server.json‎
++12
+Lines changed: 12 additions & 0 deletions
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -0,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
+    "outDir": "dist/server",
+    "esModuleInterop": true
+  },
+  "include": ["server", "api"]
+}
+‎vercel.json‎
++9
+Lines changed: 9 additions & 0 deletions
+Original file line number	Original file line	Diff line number	Diff line change
+@@ -0,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "vite build",
+  "outputDirectory": "dist/public",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}
+0 commit comments
+Comments
+0
+ (0)
+Comment
+You're not receiving notifications from this thread.
+
+2 files remain
