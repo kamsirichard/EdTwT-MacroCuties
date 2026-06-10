@@ -30,6 +30,9 @@ const CONDIMENT_CATEGORY_EMOJIS: Record<string, string> = {
   Sweet: "🍯",
   Oil: "🫒",
   Protein: "🥩",
+  "Coffee Extra": "☕",
+  Drink: "🥤",
+  "Brand Sauce": "🏷️",
 };
 
 export default function MealBuilder({

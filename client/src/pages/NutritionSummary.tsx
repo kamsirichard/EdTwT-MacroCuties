@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { ArrowLeft, Download, RotateCcw, Heart, AlertCircle, CheckCircle, Flame } from "lucide-react";
-import { api, type NutritionResult } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft, RotateCcw, Heart, AlertCircle, CheckCircle,
+  Flame, BookmarkPlus, Check, LogIn, X,
+} from "lucide-react";
+import { api, type NutritionResult, type MealItem } from "@/lib/api";
 import { MacroRing } from "@/components/MacroRing";
 import { NutritionBar } from "@/components/NutritionBar";
 import { cn, formatCalories, getCalorieColor } from "@/lib/utils";
-import type { MealItem } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NutritionSummaryProps {
   mealItems: MealItem[];
@@ -29,9 +32,16 @@ function getCalorieMessage(cal: number) {
 
 export default function NutritionSummary({ mealItems, onClear }: NutritionSummaryProps) {
   const [, setLocation] = useLocation();
+  const { user, token } = useAuth();
   const [result, setResult] = useState<NutritionResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [mealName, setMealName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (mealItems.length === 0) return;
@@ -41,6 +51,28 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [mealItems]);
+
+  const handleSave = async () => {
+    if (!result || !token) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const res = await fetch("/api/meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: mealName || "My Meal", result, mealItems }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      setSaved(true);
+      setSaveOpen(false);
+      setMealName("");
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save meal");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -84,6 +116,20 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
               <span>Back to Meal</span>
             </button>
             <div className="flex gap-2">
+              {saved ? (
+                <div className="flex items-center gap-1.5 text-xs font-700 text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl">
+                  <Check size={13} />
+                  Saved!
+                </div>
+              ) : (
+                <button
+                  onClick={() => user ? setSaveOpen(true) : setLocation("/auth")}
+                  className="flex items-center gap-1.5 text-xs font-700 text-primary bg-white/80 border border-primary/30 px-3 py-2 rounded-xl hover:bg-primary/5 transition-colors"
+                >
+                  {user ? <BookmarkPlus size={13} /> : <LogIn size={13} />}
+                  {user ? "Save Meal" : "Log in to Save"}
+                </button>
+              )}
               <button
                 data-testid="button-reset"
                 onClick={() => { onClear(); setLocation("/"); }}
@@ -95,11 +141,7 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
             </div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-4xl mb-3">{message.emoji}</div>
             <div className={cn("inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-700 border mb-3", message.bg, message.color)}>
               {message.label}
@@ -113,14 +155,81 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
         </div>
       </div>
 
+      {/* Save modal */}
+      <AnimatePresence>
+        {saveOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-4"
+            onClick={(e) => e.target === e.currentTarget && setSaveOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-800 text-foreground">Save this meal</h3>
+                  <p className="text-xs text-muted-foreground font-500 mt-0.5">
+                    {formatCalories(totals.calories)} cal · {breakdown.length} item(s)
+                  </p>
+                </div>
+                <button onClick={() => setSaveOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <X size={18} />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={mealName}
+                onChange={(e) => setMealName(e.target.value)}
+                placeholder="Give this meal a name (optional)"
+                className="w-full px-4 py-3 rounded-2xl border-2 border-border focus:border-primary focus:outline-none font-500 text-sm mb-3 transition-colors"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              />
+              {saveError && (
+                <p className="text-xs text-rose-500 font-600 mb-3">{saveError}</p>
+              )}
+              <div className="grid grid-cols-2 gap-2 text-xs font-700 text-muted-foreground bg-muted rounded-2xl p-3 mb-4">
+                <span>P: {Math.round(Number(totals.protein_g))}g</span>
+                <span>C: {Math.round(Number(totals.carbs_g))}g</span>
+                <span>F: {Math.round(Number(totals.fat_g))}g</span>
+                <span>Na: {Math.round(Number(totals.sodium_mg))}mg</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSaveOpen(false)}
+                  className="flex-1 border-2 border-border rounded-2xl py-3 font-700 text-foreground/60 hover:border-foreground/30 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex-1 gradient-pink text-white rounded-2xl py-3 font-800 shadow-md hover:scale-105 transition-transform disabled:opacity-60 disabled:scale-100 text-sm flex items-center justify-center gap-1.5"
+                >
+                  {saving ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <BookmarkPlus size={14} />
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        {/* Macro ring + breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-3xl shadow-sm border border-border p-5"
-        >
+        {/* Macro ring */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-3xl shadow-sm border border-border p-5">
           <h2 className="text-base font-800 text-foreground mb-4">Macronutrients</h2>
           <div className="flex items-center gap-6">
             <div className="relative flex-shrink-0">
@@ -143,7 +252,7 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
                     </span>
                     <span className="font-800">
                       <span className={textColor}>{pct}%</span>
-                      <span className="text-foreground/40 font-500 ml-1.5">{Math.round(value * 10) / 10}g</span>
+                      <span className="text-foreground/40 font-500 ml-1.5">{Math.round(Number(value) * 10) / 10}g</span>
                     </span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -161,12 +270,7 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
         </motion.div>
 
         {/* Daily goals */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl shadow-sm border border-border p-5"
-        >
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-3xl shadow-sm border border-border p-5">
           <h2 className="text-base font-800 text-foreground mb-4">% of Daily Goals <span className="text-xs font-500 text-muted-foreground">(based on 2,000 cal diet)</span></h2>
           <div className="space-y-4">
             <NutritionBar label="Calories" value={dailyGoals.calories.value} goal={dailyGoals.calories.goal} unit=" cal" color="macro-protein bg-gradient-to-r from-rose-400 to-pink-400" emoji="🔥" />
@@ -179,13 +283,8 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
           </div>
         </motion.div>
 
-        {/* Additional details */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="bg-white rounded-3xl shadow-sm border border-border p-5"
-        >
+        {/* More details */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-white rounded-3xl shadow-sm border border-border p-5">
           <h2 className="text-base font-800 text-foreground mb-4">More Details</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
@@ -205,12 +304,7 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
         </motion.div>
 
         {/* Item breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-3xl shadow-sm border border-border p-5"
-        >
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-3xl shadow-sm border border-border p-5">
           <h2 className="text-base font-800 text-foreground mb-4">Item Breakdown</h2>
           <div className="space-y-3">
             {breakdown.map((item, i) => (
@@ -249,22 +343,17 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
         </motion.div>
 
         {/* Health tips */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-3xl overflow-hidden border border-border"
-        >
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="rounded-3xl overflow-hidden border border-border">
           {totals.sodium_mg > 1500 && (
             <div className="flex gap-3 bg-amber-50 border-amber-100 p-4 border-b">
               <AlertCircle size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-700 text-sm text-amber-700">High Sodium</div>
-                <div className="text-xs text-amber-600 mt-0.5">This meal contains {totals.sodium_mg}mg sodium — that's {Math.round((totals.sodium_mg / 2300) * 100)}% of your daily limit. Stay hydrated!</div>
+                <div className="text-xs text-amber-600 mt-0.5">This meal contains {totals.sodium_mg}mg sodium — that's {Math.round((Number(totals.sodium_mg) / 2300) * 100)}% of your daily limit. Stay hydrated!</div>
               </div>
             </div>
           )}
-          {totals.sugar_g > 40 && (
+          {Number(totals.sugar_g) > 40 && (
             <div className="flex gap-3 bg-pink-50 border-pink-100 p-4 border-b">
               <AlertCircle size={18} className="text-pink-500 flex-shrink-0 mt-0.5" />
               <div>
@@ -273,7 +362,7 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
               </div>
             </div>
           )}
-          {totals.protein_g >= 25 && (
+          {Number(totals.protein_g) >= 25 && (
             <div className="flex gap-3 bg-blue-50 border-blue-100 p-4">
               <CheckCircle size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
               <div>
@@ -282,7 +371,7 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
               </div>
             </div>
           )}
-          {totals.sodium_mg <= 1500 && totals.sugar_g <= 40 && totals.protein_g < 25 && (
+          {Number(totals.sodium_mg) <= 1500 && Number(totals.sugar_g) <= 40 && Number(totals.protein_g) < 25 && (
             <div className="flex gap-3 bg-emerald-50 p-4">
               <Heart size={18} className="text-emerald-500 flex-shrink-0 mt-0.5" />
               <div>
@@ -301,6 +390,15 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
           >
             Edit Meal
           </button>
+          {!saved && user && (
+            <button
+              onClick={() => setSaveOpen(true)}
+              className="flex items-center gap-1.5 bg-white border-2 border-primary/30 text-primary rounded-2xl px-4 py-3.5 font-700 hover:bg-primary/5 transition-all"
+            >
+              <BookmarkPlus size={16} />
+              <span className="hidden sm:inline">Save</span>
+            </button>
+          )}
           <button
             data-testid="button-new-meal"
             onClick={() => { onClear(); setLocation("/"); }}
@@ -309,6 +407,18 @@ export default function NutritionSummary({ mealItems, onClear }: NutritionSummar
             New Meal 🌸
           </button>
         </div>
+
+        {!user && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="pb-8">
+            <button
+              onClick={() => setLocation("/auth")}
+              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary/30 rounded-2xl py-3.5 text-primary font-700 text-sm hover:border-primary/60 hover:bg-primary/5 transition-all"
+            >
+              <LogIn size={16} />
+              Log in to save this meal to your history
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   );

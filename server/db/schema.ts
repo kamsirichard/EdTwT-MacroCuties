@@ -107,11 +107,38 @@ export async function createSchema() {
       UNIQUE(restaurant_id, city, province_state, country, neighborhood)
     );
 
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS saved_meals (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+      name TEXT NOT NULL DEFAULT 'My Meal',
+      total_calories INTEGER NOT NULL DEFAULT 0,
+      total_protein_g DECIMAL(8,2) NOT NULL DEFAULT 0,
+      total_carbs_g DECIMAL(8,2) NOT NULL DEFAULT 0,
+      total_fat_g DECIMAL(8,2) NOT NULL DEFAULT 0,
+      total_sodium_mg DECIMAL(8,2) NOT NULL DEFAULT 0,
+      total_sugar_g DECIMAL(8,2) NOT NULL DEFAULT 0,
+      total_fiber_g DECIMAL(8,2) NOT NULL DEFAULT 0,
+      restaurant_names TEXT[] DEFAULT '{}',
+      items JSONB NOT NULL DEFAULT '[]',
+      notes TEXT,
+      saved_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant ON menu_items(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category);
     CREATE INDEX IF NOT EXISTS idx_condiments_category ON condiments(category);
     CREATE INDEX IF NOT EXISTS idx_restaurants_slug ON restaurants(slug);
     CREATE INDEX IF NOT EXISTS idx_locations_city ON restaurant_locations(city);
     CREATE INDEX IF NOT EXISTS idx_locations_restaurant ON restaurant_locations(restaurant_id);
+    CREATE INDEX IF NOT EXISTS idx_saved_meals_user ON saved_meals(user_id);
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   `);
 }

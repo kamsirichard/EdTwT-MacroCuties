@@ -5,10 +5,13 @@ import { fileURLToPath } from "url";
 import { createSchema } from "./db/schema";
 import { seedData } from "./db/seed";
 import { seedLocations } from "./db/seed-locations";
+import { seedCondimentExtras } from "./db/seed-condiment-extras";
 import restaurantRoutes from "./routes/restaurants";
 import menuItemRoutes from "./routes/menuItems";
 import condimentRoutes from "./routes/condiments";
 import nutritionRoutes from "./routes/nutrition";
+import authRoutes from "./routes/auth";
+import savedMealsRoutes from "./routes/savedMeals";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +26,8 @@ app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/menu-items", menuItemRoutes);
 app.use("/api/condiments", condimentRoutes);
 app.use("/api/nutrition", nutritionRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/meals", savedMealsRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const staticPath = path.join(__dirname, "../dist/public");
@@ -37,6 +42,7 @@ async function start() {
     await createSchema();
     await seedData();
     await seedLocations();
+    await seedCondimentExtras();
     app.listen(PORT, () => {
       console.log(`MacroCutie API running on port ${PORT}`);
     });

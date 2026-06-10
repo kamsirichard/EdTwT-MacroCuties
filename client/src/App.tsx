@@ -1,13 +1,16 @@
 import { Route, Switch, useLocation } from "wouter";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import Home from "@/pages/Home";
 import RestaurantPage from "@/pages/Restaurant";
 import MealBuilder from "@/pages/MealBuilder";
 import NutritionSummary from "@/pages/NutritionSummary";
 import About from "@/pages/About";
+import Auth from "@/pages/Auth";
+import History from "@/pages/History";
 import { useMeal } from "@/hooks/useMeal";
 
-export default function App() {
+function AppInner() {
   const [, setLocation] = useLocation();
   const meal = useMeal();
 
@@ -17,6 +20,8 @@ export default function App() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/about" component={About} />
+        <Route path="/auth" component={Auth} />
+        <Route path="/history" component={History} />
         <Route path="/restaurant/:slug">
           {(params) => (
             <RestaurantPage
@@ -61,5 +66,13 @@ export default function App() {
         </Route>
       </Switch>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
   );
 }

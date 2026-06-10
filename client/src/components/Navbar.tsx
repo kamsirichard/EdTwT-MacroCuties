@@ -1,6 +1,8 @@
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { ShoppingCart, BookOpen } from "lucide-react";
+import { ShoppingCart, BookOpen, LogIn, User, History, LogOut, ChevronDown } from "lucide-react";
 import { cn, formatCalories } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   itemCount: number;
@@ -9,6 +11,19 @@ interface NavbarProps {
 
 export function Navbar({ itemCount, totalCalories }: NavbarProps) {
   const [location, setLocation] = useLocation();
+  const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <nav className="bg-white/90 backdrop-blur-md border-b border-border sticky top-0 z-30 shadow-sm shadow-pink-50">
@@ -40,6 +55,56 @@ export function Navbar({ itemCount, totalCalories }: NavbarProps) {
             <BookOpen size={15} />
             <span>About & Data</span>
           </button>
+
+          {user ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 text-primary font-700 text-sm hover:bg-primary/20 transition-colors"
+              >
+                <div className="w-6 h-6 gradient-pink rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xs font-900">
+                    {user.displayName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="hidden sm:inline max-w-[100px] truncate">{user.displayName}</span>
+                <ChevronDown size={13} className={cn("transition-transform", menuOpen && "rotate-180")} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl shadow-pink-100 border border-border z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border">
+                    <div className="font-700 text-foreground text-sm">{user.displayName}</div>
+                    <div className="text-xs text-muted-foreground font-500 truncate">{user.email}</div>
+                  </div>
+                  <div className="p-1.5">
+                    <button
+                      onClick={() => { setLocation("/history"); setMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-600 text-foreground hover:bg-muted transition-colors"
+                    >
+                      <History size={15} className="text-primary" />
+                      My Meal History
+                    </button>
+                    <button
+                      onClick={() => { logout(); setMenuOpen(false); setLocation("/"); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-600 text-rose-500 hover:bg-rose-50 transition-colors"
+                    >
+                      <LogOut size={15} />
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => setLocation("/auth")}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-700 text-primary hover:bg-primary/10 transition-colors"
+            >
+              <LogIn size={15} />
+              <span>Log In</span>
+            </button>
+          )}
 
           <button
             data-testid="button-meal-cart"
